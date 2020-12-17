@@ -1,0 +1,7 @@
+.idea/*
+__pychache__/
+dist/
+mcmctools.egg-info/
+MANIFEST
+*.pyc
+*.pdf
