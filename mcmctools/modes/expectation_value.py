@@ -4,7 +4,7 @@ import copy
 import numpy as np
 import pandas as pd
 
-from pystatplottools.ppd_distributions.expectation_value import ExpectationValue
+from pystatplottools.expectation_values.expectation_value import ExpectationValue
 
 from mcmctools.utils.json import load_configs
 from mcmctools.loading.loading import load_data
@@ -15,8 +15,18 @@ def compute_measure_over_config(data, measure_name, sim_params):
         return compute_nth_moment(data, 2, measure_name)
     elif measure_name == "3rdMoment":
         return compute_nth_moment(data, 3, measure_name)
+    elif measure_name == "4thMoment":
+        return compute_nth_moment(data, 4, measure_name)
     elif measure_name == "AbsMean":
         return compute_abs_mean(data)
+    else:
+        try:
+            from custom_measures import compute_measures
+            return compute_measures(data=data, measure_name=measure_name, sim_params=sim_params)
+        except Exception as e:
+            import sys
+            print("Error in custom_measures.compute_measures")
+            sys.exit(e)
 
 
 def compute_mean(data):
@@ -77,7 +87,7 @@ def expectation_value(files_dir, sim_root_dir="", rel_path="./"):
     # Load configs and data
     cwd = os.getcwd()
 
-    sim_params, execution_params, running_parameter = load_configs(files_dir=files_dir, mode="expectation_value")
+    sim_params, execution_params, running_parameter = load_configs(files_dir=files_dir, mode="expectation_value", project_base_dir=cwd)
     data, filenames = load_data(files_dir=files_dir, running_parameter=running_parameter, identifier="expectation_value")
 
     # Compute measures based on the given configurations that have not been computed during the simulation
@@ -138,7 +148,7 @@ def load_expectation_value_results(files_dir):
                                convert_dates=False,  # dont convert columns to dates
                                convert_axes=False  # dont convert index to dates
                                )
-        sim_params, execution_params, running_parameter = load_configs(files_dir=files_dir, mode="expectation_value")
+        sim_params, execution_params, running_parameter = load_configs(files_dir=files_dir, mode="expectation_value", project_base_dir=os.getcwd())
         results = results.set_index(running_parameter)
 
         column_levels = []
@@ -149,6 +159,7 @@ def load_expectation_value_results(files_dir):
                 break
         results = results.transpose()
         results = results.set_index(column_levels)
+        results.index.names = ["Quantity", "Observable"][:len(column_levels)]
         results = results.transpose()
         return results
     else:
@@ -156,13 +167,5 @@ def load_expectation_value_results(files_dir):
 
 
 if __name__ == '__main__':
-    if len(sys.argv) > 1:
-        print("FilesDir:", sys.argv[1])  # , "SimRootDir:", sys.argv[2], "RelPath:", sys.argv[3])
-        expectation_value(sys.argv[1])  # , sys.argv[2], sys.argv[3])
-    else:
-        os.chdir("../../../examples/")
-        expectation_value(files_dir="IsingModelSimulation")
-        load_expectation_value_results(files_dir="IsingModelSimulation")
-
-
-
+    print("FilesDir:", sys.argv[1])  # , "SimRootDir:", sys.argv[2], "RelPath:", sys.argv[3])
+    expectation_value(sys.argv[1])  # , sys.argv[2], sys.argv[3])

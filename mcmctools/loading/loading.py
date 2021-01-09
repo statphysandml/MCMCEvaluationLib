@@ -13,6 +13,7 @@ class ConfigurationLoader(object):
         self.running_parameter = kwargs.pop("running_parameter", "default")
         self.drop_last = kwargs.pop("drop_last", False) # Should only be used if it is wanted that each chunk has the same length
         self.complex_number_format = kwargs.pop("complex_number_format", "complex") # or "plain"
+        self.skipcols = kwargs.pop("skipcols", None)
 
         # Chunksize and total number of chunks
         self.chunksize = kwargs.pop("chunksize", self.total_number_of_data_per_file)
@@ -37,7 +38,8 @@ class ConfigurationLoader(object):
             nrows=self.total_number_of_data_per_file,
             chunksize=self.chunksize,
             skiprows=self.skiprows,
-            identifier=self.identifier
+            identifier=self.identifier,
+            skipcols=self.skipcols
         )
 
         if self.total_chunks == 1:
@@ -61,7 +63,8 @@ class ConfigurationLoader(object):
                 path=self.path,
                 nrows=self.total_number_of_data_per_file,
                 chunksize=self.chunksize,
-                identifier=self.identifier
+                identifier=self.identifier,
+                skipcols=self.skipcols
             )
             self.chunk_iterator = 0
 
@@ -104,7 +107,7 @@ class ConfigurationLoader(object):
         )[0]
     
     @staticmethod
-    def load_configuration_readers(path, nrows, chunksize=100, skiprows=0, identifier=""):
+    def load_configuration_readers(path, nrows, chunksize=100, skiprows=0, identifier="", skipcols=None):
         readers = []
         filenames = []
 
@@ -112,7 +115,14 @@ class ConfigurationLoader(object):
 
         os.chdir(path)
         for file in glob.glob(identifier + "*.dat"):
-            reader = pd.read_csv(file, delimiter="\t", header=0, chunksize=chunksize, skiprows=skiprows, index_col=False, nrows=nrows)
+            if skipcols is not None:
+                with open(file) as f:
+                    header_line = f.readline()
+                usecols = [item for item in header_line.split("\t") if item not in skipcols]
+            else:
+                usecols = None
+
+            reader = pd.read_csv(file, delimiter="\t", header=0, chunksize=chunksize, skiprows=skiprows, index_col=False, nrows=nrows, usecols=usecols)
             readers.append(reader)
             filenames.append(file)
 
@@ -120,7 +130,7 @@ class ConfigurationLoader(object):
         return readers, filenames  # , chunk_order
 
     @staticmethod
-    def load_all_configurations(path, identifier="None", running_parameter="default", skiprows=0, nrows="all", complex_number_format="complex"):
+    def load_all_configurations(path, identifier="None", running_parameter="default", skiprows=0, nrows="all", complex_number_format="complex", skipcols=None):
         data = []
         filenames = []
 
@@ -131,10 +141,18 @@ class ConfigurationLoader(object):
         data_files = glob.glob(identifier + "*.dat")
 
         for file in data_files:
-            if nrows == "all":
-                dat = pd.read_csv(file, delimiter="\t", header=0, skiprows=skiprows, index_col=False)
+            if skipcols is not None:
+                with open(file) as f:
+                    header_line = f.readline()
+                header_line = header_line[:-1]
+                usecols = [item for item in header_line.split("\t") if item not in skipcols]
             else:
-                dat = pd.read_csv(file, delimiter="\t", header=0, skiprows=skiprows, index_col=False, nrows=nrows)
+                usecols = None
+
+            if nrows == "all":
+                dat = pd.read_csv(file, delimiter="\t", header=0, skiprows=skiprows, index_col=False, usecols=usecols)
+            else:
+                dat = pd.read_csv(file, delimiter="\t", header=0, skiprows=skiprows, index_col=False, nrows=nrows, usecols=usecols)
             dat = ConfigurationLoader.prepare_single_data_frame(dat=dat, file=file, running_parameter=running_parameter)
 
             data.append(dat)
@@ -293,11 +311,13 @@ class ConfigurationLoader(object):
         return data
 
 
-def load_data(files_dir, running_parameter, identifier):
+def load_data(files_dir, running_parameter, identifier, skipcols=None):
     data_path = os.getcwd() + "/data/" + files_dir
 
     data, filenames = ConfigurationLoader.load_all_configurations(
         path=data_path,
         identifier=identifier,
-        running_parameter=running_parameter)
+        running_parameter=running_parameter,
+        skipcols=skipcols
+    )
     return data, filenames

@@ -1,4 +1,4 @@
-from pystatplottools.ppd_pdf_env.loading_figure_mode import loading_figure_mode
+from pystatplottools.pdf_env.loading_figure_mode import loading_figure_mode
 fma, plt = loading_figure_mode(develop=False)
 
 import os
@@ -42,7 +42,7 @@ def correlation_time(files_dir, sim_root_dir="", rel_path="./"):
     # Load configs and data
     cwd = os.getcwd()
 
-    sim_params, execution_params, running_parameter = load_configs(files_dir=files_dir, mode="correlation_time")
+    sim_params, execution_params, running_parameter = load_configs(files_dir=files_dir, mode="correlation_time", project_base_dir=cwd)
     data, filenames = load_data(files_dir=files_dir, running_parameter=running_parameter, identifier="correlation_time")
 
     if running_parameter.capitalize() in data.columns:
@@ -77,9 +77,5 @@ def correlation_time(files_dir, sim_root_dir="", rel_path="./"):
 
 
 if __name__ == '__main__':
-    if len(sys.argv) > 1:
-        print("FilesDir:", sys.argv[1])  # , "SimRootDir:", sys.argv[2], "RelPath:", sys.argv[3])
-        correlation_time(sys.argv[1])  # , sys.argv[2], sys.argv[3])
-    else:
-        os.chdir("../../../examples/")
-        correlation_time("IsingModelSimulationWithCorrelationTime")
+    print("FilesDir:", sys.argv[1])  # , "SimRootDir:", sys.argv[2], "RelPath:", sys.argv[3])
+    correlation_time(sys.argv[1])  # , sys.argv[2], sys.argv[3])

@@ -1,15 +1,11 @@
-import os
-import shutil
-import json
-
 
 from mcmctools.pytorch.data_generation.configdatagenerator import ConfigDataGenerator
-
 
 # Avoids that samples are loaded one by another from the self.data dataframe - instead, a batch is extracted directly
 # This leads to a performance boost since the underlying data frame is accessed via slicing
 # i.e: batch = self.data.iloc[i:i+batch_size].values instead of
 #    : batch = np.stack([self.data.iloc[j] for j in range(i, i+batch_size])
+
 
 class BatchConfigDataGenerator(ConfigDataGenerator):
 

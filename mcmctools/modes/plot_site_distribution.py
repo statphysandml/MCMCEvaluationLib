@@ -1,4 +1,4 @@
-from pystatplottools.ppd_pdf_env.loading_figure_mode import loading_figure_mode
+from pystatplottools.pdf_env.loading_figure_mode import loading_figure_mode
 fma, plt = loading_figure_mode(develop=False)
 
 import os
@@ -6,7 +6,7 @@ import sys
 
 from mcmctools.utils.json import load_configs
 from mcmctools.loading.loading import load_data
-from pystatplottools.ppd_distributions.distributionDD import DistributionDD
+from pystatplottools.distributions.distributionDD import DistributionDD
 
 
 def site_distribution(files_dir, data, config_params):
@@ -35,7 +35,7 @@ def site_distribution(files_dir, data, config_params):
     dataframe_indices = linearized_statistics.index.unique(0)
     print("Considered dataframes", dataframe_indices.values)
 
-    from pystatplottools.ppd_plotting_env.contour2D import Contour2D
+    from pystatplottools.plotting_env.contour2D import Contour2D
     contour2D = Contour2D(
         data=linearized_statistics.loc["default"],
         compute_x_func=lambda x: x[axes_indices[0]],  # possibility to rescale x and y axis or perform other operation for x axis
@@ -69,7 +69,7 @@ def plot_site_distribution(files_dir, sim_root_dir="", rel_path="./"):
     # Load configs and data
     cwd = os.getcwd()
 
-    sim_params, execution_params, running_parameter = load_configs(files_dir=files_dir, mode="plot_site_distribution")
+    sim_params, execution_params, running_parameter = load_configs(files_dir=files_dir, mode="plot_site_distribution", project_base_dir=cwd)
     data, filenames = load_data(files_dir=files_dir, running_parameter=running_parameter, identifier="expectation_value")
 
     site_distribution(files_dir=files_dir, data=data, config_params=execution_params)
@@ -97,8 +97,5 @@ def custom_site_distribution(files_dir, sigma):
 
 
 if __name__ == '__main__':
-    if len(sys.argv) > 1:
-        print("FilesDir:", sys.argv[1])  # , "SimRootDir:", sys.argv[2], "RelPath:", sys.argv[3])
-        plot_site_distribution(sys.argv[1])  # , sys.argv[2], sys.argv[3])
-    else:
-        pass
+    print("FilesDir:", sys.argv[1])  # , "SimRootDir:", sys.argv[2], "RelPath:", sys.argv[3])
+    plot_site_distribution(sys.argv[1])  # , sys.argv[2], sys.argv[3])
