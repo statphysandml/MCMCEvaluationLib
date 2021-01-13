@@ -12,7 +12,7 @@ The library currently consists of the following main modules:
 Examples
 --------
 
-Examples to the different python modules can be found here: https://github.com/statphysandml/MCMCSimulationLib/tree/master/examples/python_scripts/examples. Simulation results of the Ising model are discussed as a more detailed example here: https://github.com/statphysandml/MCMCSimulationLib/blob/master/examples/python_scripts/examples/ising_model_cheat_sheet.ipynb. The example covers almost all functionalities of the library and shows additionally possible ways to make use of the pystatplottools library (https://github.com/statphysandml/pystatplottools) to analyse the data in more detail.
+Examples to the different python modules can be found here: https://github.com/statphysandml/MCMCSimulationLib/tree/master/examples/python_scripts/examples. Simulation results of the Ising model are discussed as a more detailed example here: https://github.com/statphysandml/MCMCSimulationLib/blob/master/examples/jupyter_notebooks/ising_model_cheat_sheet.ipynb. The example covers almost all functionalities of the library and shows additionally possible ways to make use of the pystatplottools library (https://github.com/statphysandml/pystatplottools) to analyse the data in more detail.
 
 Integration
 -----------
