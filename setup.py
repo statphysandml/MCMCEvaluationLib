@@ -1,18 +1,13 @@
 #!/usr/bin/env python
 
-# python setup.py sdist
-# pip install -e .
-
-# https://python-packaging-tutorial.readthedocs.io/en/latest/setup_py.html
-
-
 from distutils.core import setup
 
 setup(name='mcmctools',
       version='0.1',
-      description='Python modules for performing operations on mcmc simualtion data',
+      description='Python modules for performing operations on mcmc simualtion data.',
       author='Lukas Kades',
       author_email='lukaskades@googlemail.com',
+      url='https://github.com/statphysandml/MCMCEvaluationLib',
       packages=['mcmctools',
                 'mcmctools.modes',
                 'mcmctools.pytorch',
