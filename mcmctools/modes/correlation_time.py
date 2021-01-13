@@ -57,7 +57,7 @@ def correlation_time(files_dir, sim_root_dir="", rel_path="./"):
     correlation_times = correlation_times.div(correlation_times.iloc[0])
 
     taus = correlation_times.apply(lambda x: np.argmin(np.abs(x.values - np.exp(-1)), axis=0))
-    taus = pd.DataFrame(data=taus, columns=["CorrelationTime"])
+    taus = pd.DataFrame(data=taus + 1, columns=["CorrelationTime"])
 
     if running_parameter != "default":
         for label, corr_times in correlation_times.items():

@@ -11,11 +11,11 @@ from mcmctools.loading.loading import load_data
 
 
 def compute_measure_over_config(data, measure_name, sim_params):
-    if measure_name == "2ndMoment":
+    if measure_name == "SecondMoment":
         return compute_nth_moment(data, 2, measure_name)
-    elif measure_name == "3rdMoment":
+    elif measure_name == "ThirdMoment":
         return compute_nth_moment(data, 3, measure_name)
-    elif measure_name == "4thMoment":
+    elif measure_name == "FourthMoment":
         return compute_nth_moment(data, 4, measure_name)
     elif measure_name == "AbsMean":
         return compute_abs_mean(data)
@@ -68,7 +68,7 @@ def compute_nth_moment(data, n, measure_name):
 
 
 def compute_abs_mean(data):
-    data.insert(len(data.columns), "AbsMean", data["Config"].apply(lambda x: np.abs(np.mean(x))))
+    data.insert(len(data.columns), "AbsMean", np.abs(data["Config"].to_numpy().reshape(len(data), -1).mean(axis=1)))
     return ["AbsMean"], data
 
 
@@ -106,7 +106,7 @@ def expectation_value(files_dir, sim_root_dir="", rel_path="./"):
 
     black_expectation_value_list = ["Config"]
     expectation_value_measures = [
-        exp_value for exp_value in expectation_value_measures if exp_value not in black_expectation_value_list]
+        exp_value for exp_value in expectation_value_measures if exp_value not in black_expectation_value_list and exp_value in ep.data.columns]
 
     ep.compute_expectation_value(columns=expectation_value_measures,
                                  exp_values=['mean'])  # , 'max', 'min' , 'secondMoment', 'fourthMoment'
@@ -159,7 +159,7 @@ def load_expectation_value_results(files_dir):
                 break
         results = results.transpose()
         results = results.set_index(column_levels)
-        results.index.names = ["Quantity", "Observable"][:len(column_levels)]
+        results.index.names = ["Quantity", "Observable", "Element"][:len(column_levels)]
         results = results.transpose()
         return results
     else:
