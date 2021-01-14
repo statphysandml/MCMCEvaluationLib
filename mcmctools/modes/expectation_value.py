@@ -162,7 +162,7 @@ def load_expectation_value_results(files_dir):
         results.index.names = ["Quantity", "Observable", "Element"][:len(column_levels)]
         results = results.transpose()
         # Convert strings in dataframe to numbers
-		results = results.applymap(lambda x: float(x))
+        results = results.applymap(lambda x: float(x))
         return results
     else:
         return None
