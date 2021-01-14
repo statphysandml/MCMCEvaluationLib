@@ -142,6 +142,13 @@ def expectation_value(files_dir, sim_root_dir="", rel_path="./"):
     os.chdir(cwd)
 
 
+def to_float(x):
+    if "j" in x:
+        return np.complex(x)
+    else:
+        return np.float(x)
+
+
 def load_expectation_value_results(files_dir):
     if os.path.exists(os.getcwd() + "/results/" + files_dir + "/expectation_value_results.json"):
         results = pd.read_json(os.getcwd() + "/results/" + files_dir + "/expectation_value_results.json",
@@ -162,7 +169,7 @@ def load_expectation_value_results(files_dir):
         results.index.names = ["Quantity", "Observable", "Element"][:len(column_levels)]
         results = results.transpose()
         # Convert strings in dataframe to numbers
-        results = results.applymap(lambda x: float(x))
+        results = results.applymap(to_float)
         return results
     else:
         return None
