@@ -52,6 +52,7 @@ Projects using the MCMCEvaluationLib
 ----------------------------------
 
 - MCMCSimulationLib (https://github.com/statphysandml/MCMCSimulationLib)
+- LatticeModelSimulationLib (https://github.com/statphysandml/LatticeModelSimulationLib)
 - LatticeModelImplementations (https://github.com/statphysandml/LatticeModelImplementations)
 
 Support and development
