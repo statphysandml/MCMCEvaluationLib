@@ -24,10 +24,11 @@ def compute_measure_over_config(data, measure_name, sim_params):
             from custom_measures import compute_measures
             return compute_measures(data=data, measure_name=measure_name, sim_params=sim_params)
         except Exception as e:
-            import sys
-            print("Error in custom_measures.compute_measures")
-            sys.exit(e)
-
+            print("Unknown post measure and no module named custom_measures.py with a function compute_measures found."
+                  "The measure", measure_name, "is not computed."
+                  "You can compute custom measures by adding a corresponding .py file to your python path. In C++ "
+                  "this can be achieved by defining a python_modules_path in the project_config.sh file.")
+            return None, data
 
 def compute_mean(data):
     if data.columns.nlevels == 1:
@@ -77,6 +78,8 @@ def compute_measures_over_config(data, measures, sim_params):
     for measure in measures:
         if measure not in data.columns:
             new_measures, data = compute_measure_over_config(data=data, measure_name=measure, sim_params=sim_params)
+            if new_measures is None: # No measure has been computed
+                continue
             if len(new_measures) > 0:
                 effective_measures.remove(measure)
                 effective_measures += new_measures

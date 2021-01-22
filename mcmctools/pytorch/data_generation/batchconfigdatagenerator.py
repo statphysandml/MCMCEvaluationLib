@@ -17,6 +17,8 @@ class BatchConfigDataGenerator(ConfigDataGenerator):
         if self.iterator >= len(self.data):
             self.iterator = 0  # Reset iterator
             self.data = self.get_next_chunk_collection(resample=True)  # load data
+            # Needs to be set again if get_next_chunk_collection is called here for the first time
+            self.determine_target_and_input_size()
 
         self.iterator += self.batch_size
 
@@ -48,6 +50,8 @@ class BatchConfigDataGenerator(ConfigDataGenerator):
             # Load next chunk and reset iterator
             self.iterator = 0  # Reset iterator
             self.data = self.get_next_chunk_collection(resample=True)  # load data
+            # Needs to be set again if get_next_chunk_collection is called here for the first time
+            self.determine_target_and_input_size()
 
         self.iterator += self.batch_size
 

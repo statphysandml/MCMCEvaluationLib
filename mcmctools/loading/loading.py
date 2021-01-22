@@ -5,15 +5,27 @@ import glob
 import math
 
 
-class ConfigurationLoader(object):
+from pystatplottools.utils.multiple_inheritance_base_class import MHBC
+
+
+class ConfigurationLoader(MHBC):
     def __init__(self, **kwargs):
+        # For child classes with more than one parent class
+        super().__init__(**kwargs)
+
         self.path = kwargs.pop('path')
         self.total_number_of_data_per_file = kwargs.pop("total_number_of_data_per_file")
         self.identifier = kwargs.pop("identifier", "")
         self.running_parameter = kwargs.pop("running_parameter", "default")
-        self.drop_last = kwargs.pop("drop_last", False) # Should only be used if it is wanted that each chunk has the same length
-        self.complex_number_format = kwargs.pop("complex_number_format", "complex") # or "plain"
+        self.drop_last = kwargs.pop("drop_last", False)  # Should only be used if it is wanted that each chunk has the same length
+        self.complex_number_format = kwargs.pop("complex_number_format", "complex")  # or "plain"
         self.skipcols = kwargs.pop("skipcols", None)
+        self.transformer = kwargs.pop("transformer", None)  # For passing functions
+        self.transform = kwargs.pop("transform", False)  # Looks for transformer function in raw/transformer.py
+        self.transformer_path = kwargs.pop("transformer_path", self.path + "/raw")
+        if self.transformer_path is not None:
+            import sys
+            sys.path.append(os.path.abspath(self.transformer_path))
 
         # Chunksize and total number of chunks
         self.chunksize = kwargs.pop("chunksize", self.total_number_of_data_per_file)
@@ -53,7 +65,7 @@ class ConfigurationLoader(object):
 
     def get_next_chunk_collection(self, resample=True):
         if self.total_chunks == 1:
-            self.total_number_of_repeated_loading +=1
+            self.total_number_of_repeated_loading += 1
             return self.load_all_data(resample)
 
         if self.chunk_iterator >= self.total_chunks:
@@ -77,6 +89,17 @@ class ConfigurationLoader(object):
 
         data = ConfigurationLoader.merge_file_datastreams(data=data, resample=resample)
         data = ConfigurationLoader.transform_config_data(data=data, complex_number_format=self.complex_number_format)
+
+        if self.transform:
+            try:
+                from raw_transformer import transformer
+            except ModuleNotFoundError:
+                import sys
+                sys.exit("ModuleNotFoundError: raw_transformer.py module not found. Needs to be set via transformer"
+                         "path or by adding path of raw_transformer.py to sys.path")
+            data = transformer(data)
+        elif self.transformer is not None:
+            data = self.transformer(data)
 
         if self.running_parameter == "default":
             del data["Default"]
@@ -103,7 +126,11 @@ class ConfigurationLoader(object):
             path=self.path,
             identifier=self.identifier,
             running_parameter=self.running_parameter,
-            nrows=self.total_number_of_data_per_file
+            nrows=self.total_number_of_data_per_file,
+            complex_number_format=self.complex_number_format,
+            transform=self.transform,
+            transformer=self.transformer,
+            transformer_path=None  # Already added to sys.path in init function
         )[0]
     
     @staticmethod
@@ -130,11 +157,15 @@ class ConfigurationLoader(object):
         return readers, filenames  # , chunk_order
 
     @staticmethod
-    def load_all_configurations(path, identifier="None", running_parameter="default", skiprows=0, nrows="all", complex_number_format="complex", skipcols=None):
+    def load_all_configurations(path, identifier="None", running_parameter="default", skiprows=0, nrows="all", complex_number_format="complex", skipcols=None, transformer=None, transform=False, transformer_path=None):
         data = []
         filenames = []
 
         current_directory = os.path.abspath(os.getcwd())
+
+        if transformer_path is not None:
+            import sys
+            sys.path.append(os.path.abspath(transformer_path + "/raw"))
 
         os.chdir(path)
 
@@ -160,6 +191,17 @@ class ConfigurationLoader(object):
 
         data = ConfigurationLoader.merge_file_datastreams_by_index(data=data, by_col_index=running_parameter)
         data = ConfigurationLoader.transform_config_data(data=data, complex_number_format=complex_number_format)
+
+        if transform:
+            try:
+                from raw_transformer import transformer
+            except ModuleNotFoundError:
+                import sys
+                sys.exit("ModuleNotFoundError: raw_transformer.py module not found. Needs to be set via transformer"
+                         "path or by adding path of raw_transformer.py to sys.path")
+            data = transformer(data)
+        elif transformer is not None:
+            data = transformer(data)
 
         if running_parameter == "default":
             del data["Default"]
@@ -311,13 +353,14 @@ class ConfigurationLoader(object):
         return data
 
 
-def load_data(files_dir, running_parameter, identifier, skipcols=None):
+def load_data(files_dir, running_parameter, identifier, skipcols=None, complex_number_format="complex"):
     data_path = os.getcwd() + "/data/" + files_dir
 
     data, filenames = ConfigurationLoader.load_all_configurations(
         path=data_path,
         identifier=identifier,
         running_parameter=running_parameter,
-        skipcols=skipcols
+        skipcols=skipcols,
+        complex_number_format=complex_number_format
     )
     return data, filenames
