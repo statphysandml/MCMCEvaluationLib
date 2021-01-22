@@ -1,7 +1,7 @@
 MCMCEvaluationLib
 =================
 
-The MCMCEvaluationLib is a Python library that implements important algorithms for an evaluation of results of a Markov Chain Monte Carlo algorithms. This includes the computation of expectation values, error estimation and the computation of the autocorrelation time. The library is used by the MCMCSimulationLib (https://github.com/statphysandml/MCMCSimulationLib) which provides generic code for Markov Chain Monte Carlo algorithms in C++. Further, the library enables an easy loading of the simulation data and provides a convenient way to convert the data into a pytorch dataset.
+The MCMCEvaluationLib is a Python library that implements important algorithms for an evaluation of results of a Markov Chain Monte Carlo algorithms. This includes the computation of expectation values, error estimation and the computation of the autocorrelation time. The library is used by the MCMCSimulationLib (https://github.com/statphysandml/MCMCSimulationLib) which provides generic code for Markov Chain Monte Carlo algorithms in C++. Further, the library enables an easy loading of the simulation data and provides a convenient way to convert the data into a PyTorch dataset.
 
 The library currently consists of the following main modules:
 
@@ -12,7 +12,7 @@ The library currently consists of the following main modules:
 Examples
 --------
 
-Examples to the different python modules can be found here: https://github.com/statphysandml/MCMCSimulationLib/tree/master/examples/python_scripts/examples. Simulation results of the Ising model are discussed as a more detailed example here: https://github.com/statphysandml/MCMCSimulationLib/blob/master/examples/jupyter_notebooks/ising_model_cheat_sheet.ipynb. The example covers almost all functionalities of the library and shows additionally possible ways to make use of the pystatplottools library (https://github.com/statphysandml/pystatplottools) to analyse the data in more detail.
+Examples to the different Python modules can be found here: https://github.com/statphysandml/MCMCSimulationLib/tree/master/examples/python_scripts/examples. Simulation results of the Ising model are discussed as a more detailed example here: https://github.com/statphysandml/MCMCSimulationLib/blob/master/examples/jupyter_notebooks/ising_model_cheat_sheet.ipynb. The example covers almost all functionalities of the library and shows additionally possible ways to make use of the pystatplottools library (https://github.com/statphysandml/pystatplottools) to analyse the data in more detail.
 
 Integration
 -----------
