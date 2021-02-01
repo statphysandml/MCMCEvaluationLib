@@ -95,7 +95,7 @@ class ConfigurationLoader(MHBC):
                 from raw_transformer import transformer
             except ModuleNotFoundError:
                 import sys
-                sys.exit("ModuleNotFoundError: raw_transformer.py module not found. Needs to be set via transformer"
+                sys.exit("ModuleNotFoundError: raw_transformer.py module not found. Needs to be set via transformer_"
                          "path or by adding path of raw_transformer.py to sys.path")
             data = transformer(data)
         elif self.transformer is not None:
@@ -197,7 +197,7 @@ class ConfigurationLoader(MHBC):
                 from raw_transformer import transformer
             except ModuleNotFoundError:
                 import sys
-                sys.exit("ModuleNotFoundError: raw_transformer.py module not found. Needs to be set via transformer"
+                sys.exit("ModuleNotFoundError: raw_transformer.py module not found. Needs to be set via transformer_"
                          "path or by adding path of raw_transformer.py to sys.path")
             data = transformer(data)
         elif transformer is not None:

@@ -4,6 +4,10 @@ import copy
 import numpy as np
 import pandas as pd
 
+
+from traceback import print_exc
+
+
 from pystatplottools.expectation_values.expectation_value import ExpectationValue
 
 from mcmctools.utils.json import load_configs
@@ -23,12 +27,16 @@ def compute_measure_over_config(data, measure_name, sim_params):
         try:
             from custom_measures import compute_measures
             return compute_measures(data=data, measure_name=measure_name, sim_params=sim_params)
-        except Exception as e:
-            print("Unknown post measure and no module named custom_measures.py with a function compute_measures found."
-                  "The measure", measure_name, "is not computed."
+        except ModuleNotFoundError:
+            print("Unknown post measure or no module named custom_measures.py with a "
+                  "function compute_measures found. The measure", measure_name, "is not computed. "
                   "You can compute custom measures by adding a corresponding .py file to your python path. In C++ "
                   "this can be achieved by defining a python_modules_path in the project_config.sh file.")
             return None, data
+        except Exception as e:
+            print_exc()
+            return None, data
+
 
 def compute_mean(data):
     if data.columns.nlevels == 1:
