@@ -41,7 +41,7 @@ Dependencies
 
 - matplotlib
 - numpy
-- pandas
+- pandas (version >= 1.1)
 - scipy
 - pytorch
 - (jupyter lab)
