@@ -28,9 +28,9 @@ class BatchGraphDataGenerator(BatchConfigDataGenerator):
 
     def generate_edge_indices(self, edge_type):
         if edge_type == "nearest_neighbour":
-            self.generate_nearest_neighbour_edge_indices()
+            return self.generate_nearest_neighbour_edge_indices()
         elif edge_type == "plaquette":
-            self.generate_plaquette_edge_indices()
+            return self.generate_plaquette_edge_indices()
         else:
             assert False, "Edge type not known."
 

@@ -94,13 +94,15 @@ def compute_measures_over_config(data, measures, sim_params):
     return effective_measures, data
 
 
-def expectation_value(files_dir, sim_root_dir="", rel_path="./"):
+def expectation_value(files_dir, sim_root_dir="", rel_path="./", custom_load_data=None):
     # Load configs and data
     cwd = os.getcwd()
 
     sim_params, execution_params, running_parameter = load_configs(files_dir=files_dir, mode="expectation_value", project_base_dir=cwd)
-    data, filenames = load_data(files_dir=files_dir, running_parameter=running_parameter, identifier="expectation_value")
-
+    if custom_load_data is None:
+        data, filenames = load_data(files_dir=files_dir, running_parameter=running_parameter, identifier="expectation_value")
+    else:
+        data = custom_load_data(files_dir=files_dir, running_parameter=running_parameter, identifier="expectation_value")
     # Compute measures based on the given configurations that have not been computed during the simulation
     post_measures = execution_params["post_measures"]
     if post_measures is not None:
@@ -157,7 +159,10 @@ def to_float(x):
     if "j" in x:
         return np.complex(x)
     else:
-        return np.float(x)
+        try:
+            return np.float(x)
+        except:
+            return x
 
 
 def load_expectation_value_results(files_dir):

@@ -353,8 +353,11 @@ class ConfigurationLoader(MHBC):
         return data
 
 
-def load_data(files_dir, running_parameter, identifier, skipcols=None, complex_number_format="complex"):
-    data_path = os.getcwd() + "/data/" + files_dir
+def load_data(files_dir, running_parameter, identifier, skipcols=None, complex_number_format="complex", project_base_dir=None):
+    if project_base_dir is None:
+        data_path = os.getcwd() + "/data/" + files_dir
+    else:
+        data_path = project_base_dir + "/data/" + files_dir
 
     data, filenames = ConfigurationLoader.load_all_configurations(
         path=data_path,
