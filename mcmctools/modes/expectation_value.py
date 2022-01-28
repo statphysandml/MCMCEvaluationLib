@@ -10,11 +10,11 @@ from traceback import print_exc
 
 from pystatplottools.expectation_values.expectation_value import ExpectationValue
 
-from mcmctools.utils.json import load_configs
-from mcmctools.loading.loading import load_data
+from mcmctools.utils.utils import to_float
+from mcmctools.loading.loading import load_data_based_running_parameter
 
 
-def compute_measure_over_config(data, measure_name, sim_params):
+def compute_measure_over_config(data, measure_name, custom_measures_func=None, custom_measures_args=None):
     if measure_name == "SecondMoment":
         return compute_nth_moment(data, 2, measure_name)
     elif measure_name == "ThirdMoment":
@@ -23,15 +23,23 @@ def compute_measure_over_config(data, measure_name, sim_params):
         return compute_nth_moment(data, 4, measure_name)
     elif measure_name == "AbsMean":
         return compute_abs_mean(data)
+    elif custom_measures_func is None:
+        print("Unknown post measure or no module named custom_measures.py with a "
+              "function compute_measures found. The measure", measure_name, "is not computed. "
+              "You can compute custom measures by adding a corresponding .py file to your python path. In C++ "
+              "this can be achieved by defining a python_modules_path via -DPYTHON_SCRIPTS_PATH=<relative or "
+              "absolute path to custom_modules.py>.")
+        return None, data
     else:
         try:
-            from custom_measures import compute_measures
-            return compute_measures(data=data, measure_name=measure_name, sim_params=sim_params)
+            # from custom_measures import compute_measures
+            return custom_measures_func(data=data, measure_name=measure_name, custom_measures_args=custom_measures_args)
         except ModuleNotFoundError:
             print("Unknown post measure or no module named custom_measures.py with a "
                   "function compute_measures found. The measure", measure_name, "is not computed. "
                   "You can compute custom measures by adding a corresponding .py file to your python path. In C++ "
-                  "this can be achieved by defining a python_modules_path in the project_config.sh file.")
+                  "this can be achieved by defining a python_modules_path via -DPYTHON_SCRIPTS_PATH=<relative or "
+                  "absolute path to custom_modules.py>.")
             return None, data
         except Exception as e:
             print_exc()
@@ -81,11 +89,11 @@ def compute_abs_mean(data):
     return ["AbsMean"], data
 
 
-def compute_measures_over_config(data, measures, sim_params):
+def compute_measures_over_config(data, measures, custom_measures_func=None, custom_measures_args=None):
     effective_measures = copy.deepcopy(measures)
     for measure in measures:
         if measure not in data.columns:
-            new_measures, data = compute_measure_over_config(data=data, measure_name=measure, sim_params=sim_params)
+            new_measures, data = compute_measure_over_config(data=data, measure_name=measure, custom_measures_func=custom_measures_func, custom_measures_args=custom_measures_args)
             if new_measures is None: # No measure has been computed
                 continue
             if len(new_measures) > 0:
@@ -94,84 +102,109 @@ def compute_measures_over_config(data, measures, sim_params):
     return effective_measures, data
 
 
-def expectation_value(files_dir, sim_root_dir="", rel_path="./", custom_load_data=None):
-    # Load configs and data
-    cwd = os.getcwd()
+""" One of rel_data_dir and data needs to be defined. """
+def expectation_value(measures, running_parameter="default", rp_keys=None, rel_data_dir=None, data=None,
+                      number_of_measurements=None, error_type="statistical", n_means_bootstrap=None, rel_results_dir=None, sim_base_dir=None,
+                      custom_measures_func=None, custom_measures_args=None, custom_load_data_func=None, custom_load_data_args=None):
+    print("Computing expectation values...")
 
-    sim_params, execution_params, running_parameter = load_configs(files_dir=files_dir, mode="expectation_value", project_base_dir=cwd)
-    if custom_load_data is None:
-        data, filenames = load_data(files_dir=files_dir, running_parameter=running_parameter, identifier="expectation_value")
+    # Load data
+    if data is None:
+        data = load_data_based_running_parameter(
+            rel_data_dir=rel_data_dir, identifier="expectation_value", running_parameter=running_parameter, rp_keys=rp_keys,
+            sim_base_dir=sim_base_dir, custom_load_data_func=custom_load_data_func, custom_load_data_args=custom_load_data_args)
+
+    if number_of_measurements is not None:
+        assert number_of_measurements <= len(data.loc[data.index.unique(0)[0]]), "Number of measurements cannot exceed number of actual measurements."
     else:
-        data = custom_load_data(files_dir=files_dir, running_parameter=running_parameter, identifier="expectation_value")
+        number_of_measurements = len(data.loc[data.index.unique(0)[0]])
+
     # Compute measures based on the given configurations that have not been computed during the simulation
-    post_measures = execution_params["post_measures"]
-    if post_measures is not None:
-        post_measures, data = compute_measures_over_config(data=data, measures=post_measures, sim_params=sim_params)
+    post_measures = [measure for measure in measures if measure not in data.columns.unique(0).values]
+    if len(post_measures) > 0:
+        post_measures, data = compute_measures_over_config(
+            data=data, measures=post_measures, custom_measures_func=custom_measures_func,
+            custom_measures_args=custom_measures_args
+        )
 
     # Compute the expectation values and the error
     ep = ExpectationValue(data=data)
 
-    expectation_value_measures = []
-    if sim_params["systembase_params"]["measures"] is not None:
-        expectation_value_measures += sim_params["systembase_params"]["measures"]
-    if post_measures is not None:
-        expectation_value_measures += post_measures
-
     black_expectation_value_list = ["Config"]
     expectation_value_measures = [
-        exp_value for exp_value in expectation_value_measures if exp_value not in black_expectation_value_list and exp_value in ep.data.columns]
+        exp_value for exp_value in measures if exp_value not in black_expectation_value_list and exp_value in ep.data.columns]
 
     ep.compute_expectation_value(columns=expectation_value_measures,
                                  exp_values=['mean'])  # , 'max', 'min' , 'secondMoment', 'fourthMoment'
     expectation_values = ep.expectation_values
 
-    if "n_means_bootstrap" in execution_params.keys() and execution_params["n_means_bootstrap"] != 0:
-        ep.compute_error_with_bootstrap(n_means_boostrap=execution_params["n_means_bootstrap"],
-                                        number_of_measurements=execution_params["number_of_measurements"],
-                                        columns=expectation_value_measures,
-                                        exp_values=['mean'],
-                                        running_parameter=running_parameter)
+    if error_type == "bootstrap":
+        ep.bootstrap_error(n_means_boostrap=n_means_bootstrap,
+                           number_of_measurements=number_of_measurements,
+                           columns=expectation_value_measures,
+                           exp_values=['mean'],
+                           running_parameter=running_parameter)
+    elif error_type == "jackknife":
+        ep.jackknife_error(number_of_measurements=number_of_measurements,
+                           columns=expectation_value_measures,
+                           exp_values=['mean'],
+                           running_parameter=running_parameter)
     else:
-        ep.compute_std_error(columns=expectation_value_measures)
+        ep.statistical_error(number_of_measurements=number_of_measurements,
+                             columns=expectation_value_measures)
 
     errors = ep.errors
 
     expectation_values = ep.drop_multiindex_levels_with_unique_entries(data=expectation_values)
     errors = ep.drop_multiindex_levels_with_unique_entries(data=errors)
-    results = pd.concat([expectation_values, errors], keys=["ExpVal", "Error"], axis=1)
+    results = pd.concat([expectation_values, errors], keys=["Estimate", "Std"], axis=1)
+    results = results.sort_index(axis=1, level=1, sort_remaining=False)
 
-    results = results.transpose()
-    results = results.sort_index(level=1, sort_remaining=False)
-    results = results.reset_index()
-    results = results.transpose()
-    results = results.reset_index()
+    if rel_results_dir is not None:
+        # Combine results with existing results
+        existing_json_results = load_expectation_value_results(rel_results_dir=rel_results_dir, sim_base_dir=sim_base_dir)
+        if existing_json_results is not None:
+            try:
+                json_results = results.combine_first(existing_json_results)
+            except ValueError:
+                json_results = None
+                print("Note: Results were not stored. Expectation values in existing expectation_value_results.json and computed expectation values "
+                      "are based on different key input variables (measures, etc.). Either delete the existing json file "
+                      "or adapt your simulation parameters.")
+        else:
+            json_results = results
 
-    if not os.path.isdir(os.getcwd() + "/results/" + files_dir):
-        os.makedirs(os.getcwd() + "/results/" + files_dir)
+        if json_results is not None:
+            json_results = json_results.transpose()
+            json_results = json_results.reset_index()
+            json_results = json_results.transpose()
+            json_results = json_results.reset_index()
 
-    results = results.applymap(str)
-    results.to_json(os.getcwd() + "/results/" + files_dir + "/expectation_value_results.json", indent=4)
+            from mcmctools.utils.utils import get_rel_path
+            results_path = get_rel_path(rel_dir=rel_results_dir, sim_base_dir=sim_base_dir)
 
-    os.chdir(cwd)
+            json_results = json_results.applymap(str)
+            json_results.to_json(results_path + "/expectation_value_results.json", indent=4)
 
-
-def to_float(x):
-    if "j" in x:
-        return np.complex(x)
     else:
-        try:
-            return np.float(x)
-        except:
-            return x
+        results = results.sort_index(axis=1, level=1, sort_remaining=False)
+
+    return results
 
 
-def load_expectation_value_results(files_dir):
-    if os.path.exists(os.getcwd() + "/results/" + files_dir + "/expectation_value_results.json"):
-        results = pd.read_json(os.getcwd() + "/results/" + files_dir + "/expectation_value_results.json",
-                               convert_dates=False,  # dont convert columns to dates
-                               convert_axes=False  # dont convert index to dates
-                               )
-        sim_params, execution_params, running_parameter = load_configs(files_dir=files_dir, mode="expectation_value", project_base_dir=os.getcwd())
+def load_expectation_value_results(rel_results_dir, sim_base_dir=None):
+    from mcmctools.utils.utils import get_rel_path
+    results_path = get_rel_path(rel_dir=rel_results_dir, sim_base_dir=sim_base_dir)
+
+    if os.path.exists(results_path + "/expectation_value_results.json"):
+        results = pd.read_json(
+            results_path + "/expectation_value_results.json",
+            convert_dates=False,  # dont convert columns to dates
+            convert_axes=False  # dont convert index to dates
+        )
+
+        running_parameter = results.columns[0]
+
         results = results.set_index(running_parameter)
 
         column_levels = []
@@ -188,6 +221,8 @@ def load_expectation_value_results(files_dir):
         results = results.applymap(to_float)
         return results
     else:
+        # No results found
+        print("Generating expectation_value_results.json file in", os.path.abspath(results_path))
         return None
 
 

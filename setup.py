@@ -12,5 +12,6 @@ setup(name='mcmctools',
                 'mcmctools.modes',
                 'mcmctools.pytorch',
                 'mcmctools.loading',
+                'mcmctools.mcmc',
                 'mcmctools.utils']
      )
