@@ -17,7 +17,7 @@ class ConfigurationLoader(MHBC):
         self.total_number_of_data_per_file = kwargs.pop("total_number_of_data_per_file")
         self.identifier = kwargs.pop("identifier", "")
         self.running_parameter = kwargs.pop("running_parameter", "default")
-        self.rp_keys = kwargs.pop("rp_keys", None)
+        self.rp_values = kwargs.pop("rp_values", None)
         self.drop_last = kwargs.pop("drop_last", False)  # Should only be used if it is wanted that each chunk has the same length
         self.complex_number_format = kwargs.pop("complex_number_format", "complex")  # or "plain"
         self.skipcols = kwargs.pop("skipcols", None)
@@ -54,7 +54,7 @@ class ConfigurationLoader(MHBC):
             identifier=self.identifier,
             skipcols=self.skipcols,
             running_parameter=self.running_parameter,
-            rp_keys=self.rp_keys
+            rp_values=self.rp_values
         )
 
         if self.total_chunks == 1:
@@ -81,7 +81,7 @@ class ConfigurationLoader(MHBC):
                 identifier=self.identifier,
                 skipcols=self.skipcols,
                 running_parameter=self.running_parameter,
-                rp_keys=self.rp_keys
+                rp_values=self.rp_values
             )
             self.chunk_iterator = 0
 
@@ -139,7 +139,7 @@ class ConfigurationLoader(MHBC):
         )[0]
     
     @staticmethod
-    def load_configuration_readers(path, nrows, chunksize=100, skiprows=0, identifier="", skipcols=None, running_parameter="default", rp_keys=None):
+    def load_configuration_readers(path, nrows, chunksize=100, skiprows=0, identifier="", skipcols=None, running_parameter="default", rp_values=None):
         readers = []
         filenames = []
 
@@ -149,8 +149,8 @@ class ConfigurationLoader(MHBC):
         for file in glob.glob(identifier + "*.dat"):
             running_parameter_val = ConfigurationLoader.retrieve_running_parameter_val_from_file(
                 file=file, running_parameter=running_parameter)
-            # Ensure that for rp_keys only the data files part of rp_keys are loaded
-            if rp_keys is not None and running_parameter_val != "default" and running_parameter_val not in rp_keys:
+            # Ensure that for rp_values only the data files part of rp_values are loaded
+            if rp_values is not None and running_parameter_val != "default" and running_parameter_val not in rp_values:
                 continue
 
             if skipcols is not None:
@@ -168,7 +168,7 @@ class ConfigurationLoader(MHBC):
         return readers, filenames  # , chunk_order
 
     @staticmethod
-    def load_all_configurations(path, identifier="None", running_parameter="default", skiprows=0, nrows="all", complex_number_format="complex", skipcols=None, transformer=None, transform=False, transformer_path=None, rp_keys=None):
+    def load_all_configurations(path, identifier="None", running_parameter="default", skiprows=0, nrows="all", complex_number_format="complex", skipcols=None, transformer=None, transform=False, transformer_path=None, rp_values=None):
         data = []
         filenames = []
 
@@ -180,8 +180,8 @@ class ConfigurationLoader(MHBC):
         for file in data_files:
             running_parameter_val = ConfigurationLoader.retrieve_running_parameter_val_from_file(
                 file=file, running_parameter=running_parameter)
-            # Ensure that for rp_keys only the data files part of rp_keys are loaded
-            if rp_keys is not None and running_parameter_val != "default" and running_parameter_val not in rp_keys:
+            # Ensure that for rp_values only the data files part of rp_values are loaded
+            if rp_values is not None and running_parameter_val != "default" and running_parameter_val not in rp_values:
                 continue
 
             if skipcols is not None:
@@ -384,7 +384,7 @@ class ConfigurationLoader(MHBC):
         return data
 
 
-def load_data(rel_data_dir, running_parameter, identifier, skipcols=None, complex_number_format="complex", sim_base_dir=None, rp_keys=None):
+def load_data(rel_data_dir, running_parameter, identifier, skipcols=None, complex_number_format="complex", sim_base_dir=None, rp_values=None):
     if sim_base_dir is None:
         data_path = os.getcwd() + "/" + rel_data_dir
     else:
@@ -396,18 +396,18 @@ def load_data(rel_data_dir, running_parameter, identifier, skipcols=None, comple
         running_parameter=running_parameter,
         skipcols=skipcols,
         complex_number_format=complex_number_format,
-        rp_keys=rp_keys
+        rp_values=rp_values
     )
     return data, filenames
 
 
-def load_data_based_running_parameter(rel_data_dir, identifier, running_parameter="default", rp_keys=None, sim_base_dir=None, custom_load_data_func=None, custom_load_data_args=None):
+def load_data_based_running_parameter(rel_data_dir, identifier, running_parameter="default", rp_values=None, sim_base_dir=None, custom_load_data_func=None, custom_load_data_args=None):
     if custom_load_data_func is None:
         data, _ = load_data(rel_data_dir=rel_data_dir, running_parameter=running_parameter,
-                            identifier=identifier, sim_base_dir=sim_base_dir, rp_keys=rp_keys)
+                            identifier=identifier, sim_base_dir=sim_base_dir, rp_values=rp_values)
     else:
         data = custom_load_data_func(
             rel_data_dir=rel_data_dir, running_parameter=running_parameter, identifier=identifier,
-            sim_base_dir=sim_base_dir, rp_keys=rp_keys, custom_load_data_args=custom_load_data_args
+            sim_base_dir=sim_base_dir, rp_values=rp_values, custom_load_data_args=custom_load_data_args
         )
     return data

@@ -30,13 +30,15 @@ class IsingModel:
         else:
             self.lattice = np.ones(self.n_sites, dtype=np.int8)
 
-    def set_measure_names(self, measures):
-        self.measures = measures
-
+    @property
     def measure_names(self):
         return self.measures
 
-    def update_step(self, n_step):
+    @measure_names.setter
+    def measure_names(self, measures):
+        self.measures = measures
+
+    def update(self, n_step):
         random_sites = np.random.randint(0, self.n_sites, n_step)
         rand = np.random.rand(n_step)
         for step in range(n_step):
@@ -81,7 +83,7 @@ if __name__ == "__main__":
                                 rel_results_path="./data/Test/results/",
                                 # running_parameter_kind="model_params",
                                 running_parameter="beta",
-                                rp_keys=[0.1, 0.4, 0.7])
+                                rp_values=[0.1, 0.4, 0.7])
 
     simulation.run_equilibrium_time_simulation(measure="Mean", sample_size=10, number_of_steps=100)
 

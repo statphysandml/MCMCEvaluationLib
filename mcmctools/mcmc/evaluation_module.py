@@ -10,7 +10,7 @@ class EvaluationModule:
                  rel_results_path=None,  # -> sim_base_dir + "/" + rel_results_path
                  running_parameter_kind=None,
                  running_parameter=None,
-                 rp_keys=None,
+                 rp_values=None,
                  **kwargs):
         if sim_base_dir is None:
             import os
@@ -21,24 +21,24 @@ class EvaluationModule:
         self.rel_results_path = rel_results_path
         self.running_parameter_kind = running_parameter_kind
         self.running_parameter = running_parameter
-        self.rp_keys = rp_keys
+        self.rp_values = rp_values
 
         self.computed_equilibrium_times = None
         self.computed_correlation_times = None
         self.computed_expectation_values = None
 
     def compute_equilibrium_time(self, data=None, sample_size=None, number_of_steps=None, eval_confidence_range=0.1,
-                                 eval_confidence_window=10, measure=None, rp_keys=None, from_file=False, fma=None,
+                                 eval_confidence_window=10, measure=None, rp_values=None, from_file=False, fma=None,
                                  custom_load_data_func=None, custom_load_data_args=None):
-        if rp_keys is None:
-            rp_keys = self.rp_keys
+        if rp_values is None:
+            rp_values = self.rp_values
 
         if from_file:
             assert self.rel_data_path is not None, "simulation config file cannot be found if rel_data_path is not defined."
             from mcmctools.utils.json import load_json_sim_params
             sim_params = load_json_sim_params(
                 rel_data_path=self.rel_data_path, identifier="equilibrium_time",
-                running_parameter=self.running_parameter, rp_key=rp_keys[0], sim_base_dir=self.sim_base_dir)
+                running_parameter=self.running_parameter, rp_key=rp_values[0], sim_base_dir=self.sim_base_dir)
             execution_params = sim_params["execution_params"]
             sample_size = execution_params["sample_size"]
             number_of_steps = execution_params["number_of_steps"]
@@ -53,23 +53,23 @@ class EvaluationModule:
         equilibrium_times = equilibrium_time(
             sample_size=sample_size, number_of_steps=number_of_steps, confidence_range=eval_confidence_range,
             confidence_window=eval_confidence_window, measure=measure,
-            running_parameter=self.running_parameter, rp_keys=rp_keys,
+            running_parameter=self.running_parameter, rp_values=rp_values,
             rel_data_dir=self.rel_data_path, data=data, rel_results_dir=self.rel_results_path,
             sim_base_dir=self.sim_base_dir, fma=fma, custom_load_data_func=custom_load_data_func,
             custom_load_data_args=custom_load_data_args)
         self.computed_equilibrium_times = equilibrium_times
 
     def compute_correlation_time(self, data=None, minimum_sample_size=None, maximum_correlation_time=None, measure=None,
-                                 rp_keys=None, from_file=False, fma=None, custom_load_data_func=None, custom_load_data_args=None):
-        if rp_keys is None:
-            rp_keys = self.rp_keys
+                                 rp_values=None, from_file=False, fma=None, custom_load_data_func=None, custom_load_data_args=None):
+        if rp_values is None:
+            rp_values = self.rp_values
 
         if from_file:
             assert self.rel_data_path is not None, "simulation config file cannot be found if rel_data_path is not defined."
             from mcmctools.utils.json import load_json_sim_params
             sim_params = load_json_sim_params(
                 rel_data_path=self.rel_data_path, identifier="correlation_time",
-                running_parameter=self.running_parameter, rp_key=rp_keys[0], sim_base_dir=self.sim_base_dir)
+                running_parameter=self.running_parameter, rp_key=rp_values[0], sim_base_dir=self.sim_base_dir)
             execution_params = sim_params["execution_params"]
             minimum_sample_size = execution_params["minimum_sample_size"]
             maximum_correlation_time = execution_params["maximum_correlation_time"]
@@ -78,7 +78,7 @@ class EvaluationModule:
         from mcmctools.modes.correlation_time import correlation_time
         correlation_times = correlation_time(
             minimum_sample_size=minimum_sample_size, maximum_correlation_time=maximum_correlation_time, measure=measure,
-            running_parameter=self.running_parameter, rp_keys=rp_keys,
+            running_parameter=self.running_parameter, rp_values=rp_values,
             rel_data_dir=self.rel_data_path, data=data, rel_results_dir=self.rel_results_path,
             sim_base_dir=self.sim_base_dir, fma=fma, custom_load_data_func=custom_load_data_func,
             custom_load_data_args=custom_load_data_args)
@@ -86,17 +86,17 @@ class EvaluationModule:
 
     # Eval measures can be different to the simulation, the others not (number_of_measurements as well..??)
     def compute_expectation_value(self, data=None, number_of_measurements=None, measures=None,
-                                  eval_error_type="statistical",  eval_n_means_bootstrap=0, rp_keys=None, from_file=False, custom_measures_func=None,
+                                  eval_error_type="statistical",  eval_n_means_bootstrap=0, rp_values=None, from_file=False, custom_measures_func=None,
                                   custom_measures_args=None, custom_load_data_func=None, custom_load_data_args=None):
-        if rp_keys is None:
-            rp_keys = self.rp_keys
+        if rp_values is None:
+            rp_values = self.rp_values
 
         if from_file:
             assert self.rel_data_path is not None, "simulation config file cannot be found if rel_data_path is not defined."
             from mcmctools.utils.json import load_json_sim_params
             sim_params = load_json_sim_params(
                 rel_data_path=self.rel_data_path, identifier="expectation_value",
-                running_parameter=self.running_parameter, rp_key=rp_keys[0], sim_base_dir=self.sim_base_dir)
+                running_parameter=self.running_parameter, rp_key=rp_values[0], sim_base_dir=self.sim_base_dir)
             execution_params = sim_params["execution_params"]
             measures = execution_params["measures"]
             eval_error_type = execution_params["error_type"]
@@ -106,7 +106,7 @@ class EvaluationModule:
         from mcmctools.modes.expectation_value import expectation_value
         expectation_values = expectation_value(
             number_of_measurements=number_of_measurements, measures=measures,
-            error_type=eval_error_type, n_means_bootstrap=eval_n_means_bootstrap, running_parameter=self.running_parameter, rp_keys=rp_keys,
+            error_type=eval_error_type, n_means_bootstrap=eval_n_means_bootstrap, running_parameter=self.running_parameter, rp_values=rp_values,
             rel_data_dir=self.rel_data_path, data=data, rel_results_dir=self.rel_results_path,
             sim_base_dir=self.sim_base_dir,
             custom_measures_func=custom_measures_func, custom_measures_args=custom_measures_args,
@@ -146,14 +146,14 @@ class EvaluationModule:
         from mcmctools.loading.loading import load_data_based_running_parameter
         data = load_data_based_running_parameter(
             rel_data_dir=self.rel_data_path, identifier=identifier, running_parameter=self.running_parameter,
-            rp_keys=self.rp_keys,
+            rp_values=self.rp_values,
             sim_base_dir=self.sim_base_dir, custom_load_data_func=custom_load_data_func,
             custom_load_data_args=custom_load_data_args)
 
         from mcmctools.utils.json import load_json_sim_params
         sim_params = load_json_sim_params(
             rel_data_path=self.rel_data_path, identifier=identifier,
-            running_parameter=self.running_parameter, rp_key=self.rp_keys[0], sim_base_dir=self.sim_base_dir)
+            running_parameter=self.running_parameter, rp_key=self.rp_values[0], sim_base_dir=self.sim_base_dir)
         return data, sim_params
 
     @property

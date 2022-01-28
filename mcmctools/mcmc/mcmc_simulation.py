@@ -1,23 +1,26 @@
 import pandas as pd
 
 
-from mcmc.evaluation_module import EvaluationModule
+from mcmctools.mcmc.evaluation_module import EvaluationModule
 
 
 class Model:
-    def __init__(self):
+    def __init__(self, measures):
+        self.measure_names = measures
         pass
 
     def initialize(self, starting_mode):
         pass
 
-    def set_measure_names(self, measures):
-        pass
-
+    @property
     def measure_names(self):
-        pass
+        return self.__measures
 
-    def update_step(self):
+    @measure_names.setter
+    def measure_names(self, measures):
+        self.__measures = measures
+
+    def update(self, n_step):
         pass
 
     def measure(self):
@@ -30,10 +33,10 @@ class MCMCSimulation(EvaluationModule):
                  rel_results_path=None,  # -> sim_base_dir + "/" + rel_results_path
                  running_parameter_kind=None,
                  running_parameter=None,
-                 rp_keys=None):
+                 rp_values=None):
         super().__init__(sim_base_dir=sim_base_dir, rel_data_path=rel_data_path, rel_results_path=rel_results_path,
                          running_parameter_kind=running_parameter_kind, running_parameter=running_parameter,
-                         rp_keys=rp_keys)
+                         rp_values=rp_values)
 
         self.model = model
         self.measurements = {}
@@ -45,22 +48,22 @@ class MCMCSimulation(EvaluationModule):
         self.model.initialize(starting_mode=starting_mode)
 
     def update(self, n_steps):
-        self.model.update_step(n_steps)
+        self.model.update(n_steps)
 
     def measure(self):
         measurements = self.model.measure()
         rp_val = getattr(self.model, self.running_parameter)
-        for measurement, measure_name in zip(measurements, self.model.measures):
+        for measurement, measure_name in zip(measurements, self.model.measure_names):
             self.measurements[rp_val][measure_name].append(measurement)
 
     def initialize_measurements(self, measures):
-        self.model.set_measure_names(measures=measures)
-        self.measurements = {rp_val: {measure: [] for measure in self.model.measures} for rp_val in self.rp_keys}
+        self.model.measure_names = measures
+        self.measurements = {rp_val: {measure: [] for measure in self.model.measure_names} for rp_val in self.rp_values}
 
     def measurements_to_dataframe(self, complex_number_format="complex", transformer=None, transform=False,
                                   transformer_path=None):
         from mcmctools.loading.loading import ConfigurationLoader
-        n_measurements = len(self.measurements[self.rp_keys[0]][self.model.measures[0]])
+        n_measurements = len(self.measurements[self.rp_values[0]][self.model.measure_names[0]])
         data = ConfigurationLoader.process_mcmc_configurations(
             data=[pd.DataFrame({**item, self.running_parameter.capitalize(): [key] * n_measurements}) for key, item in
                   self.measurements.items()],
@@ -75,7 +78,7 @@ class MCMCSimulation(EvaluationModule):
         self.initialize_measurements(measures=[measure])
 
         # Possibility to define a custom __iter__ class - or several for each mode...
-        for rp_val in self.rp_keys:
+        for rp_val in self.rp_values:
             starting_mode = "hot"
             for m in range(2 * sample_size):
                 self.initialize_model(starting_mode=starting_mode, rp_val=rp_val)
@@ -93,7 +96,7 @@ class MCMCSimulation(EvaluationModule):
         self.initialize_measurements(measures=[measure])
 
         # Possibility to define a custom __iter__ class - or several for each mode...
-        for rp_val in self.rp_keys:
+        for rp_val in self.rp_values:
             for m in range(minimum_sample_size):
                 self.initialize_model(starting_mode="hot", rp_val=rp_val)
                 self.update(n_steps=start_measuring)
@@ -107,7 +110,7 @@ class MCMCSimulation(EvaluationModule):
         self.initialize_measurements(measures=measures)
 
         # Possibility to define a custom __iter__ class - or several for each mode...
-        for rp_val in self.rp_keys:
+        for rp_val in self.rp_values:
             self.initialize_model(starting_mode=starting_mode, rp_val=rp_val)
             self.update(n_steps=n_steps_equilibrium)
             self.measure()

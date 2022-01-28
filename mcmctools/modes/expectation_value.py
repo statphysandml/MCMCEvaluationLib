@@ -103,7 +103,7 @@ def compute_measures_over_config(data, measures, custom_measures_func=None, cust
 
 
 """ One of rel_data_dir and data needs to be defined. """
-def expectation_value(measures, running_parameter="default", rp_keys=None, rel_data_dir=None, data=None,
+def expectation_value(measures, running_parameter="default", rp_values=None, rel_data_dir=None, data=None,
                       number_of_measurements=None, error_type="statistical", n_means_bootstrap=None, rel_results_dir=None, sim_base_dir=None,
                       custom_measures_func=None, custom_measures_args=None, custom_load_data_func=None, custom_load_data_args=None):
     print("Computing expectation values...")
@@ -111,7 +111,7 @@ def expectation_value(measures, running_parameter="default", rp_keys=None, rel_d
     # Load data
     if data is None:
         data = load_data_based_running_parameter(
-            rel_data_dir=rel_data_dir, identifier="expectation_value", running_parameter=running_parameter, rp_keys=rp_keys,
+            rel_data_dir=rel_data_dir, identifier="expectation_value", running_parameter=running_parameter, rp_values=rp_values,
             sim_base_dir=sim_base_dir, custom_load_data_func=custom_load_data_func, custom_load_data_args=custom_load_data_args)
 
     if number_of_measurements is not None:

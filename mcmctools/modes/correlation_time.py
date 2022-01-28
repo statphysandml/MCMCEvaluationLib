@@ -38,7 +38,7 @@ def plot_correlation_time(corr_times, label, maximum_correlation_time, filename=
     ax.legend(loc="upper right")
 
 
-def correlation_time(minimum_sample_size, maximum_correlation_time, measure, running_parameter="default", rp_keys=None,
+def correlation_time(minimum_sample_size, maximum_correlation_time, measure, running_parameter="default", rp_values=None,
                      rel_data_dir=None, data=None, rel_results_dir=None, sim_base_dir=None, fma=None,
                      custom_load_data_func=None, custom_load_data_args=None):
     print("Computing correlation times...")
@@ -47,7 +47,7 @@ def correlation_time(minimum_sample_size, maximum_correlation_time, measure, run
     if data is None:
         data = load_data_based_running_parameter(
             rel_data_dir=rel_data_dir, identifier="correlation_time", running_parameter=running_parameter,
-            rp_keys=rp_keys, sim_base_dir=sim_base_dir, custom_load_data_func=custom_load_data_func,
+            rp_values=rp_values, sim_base_dir=sim_base_dir, custom_load_data_func=custom_load_data_func,
             custom_load_data_args=custom_load_data_args)
 
     if running_parameter.capitalize() in data.columns:
