@@ -131,8 +131,11 @@ def expectation_value(measures, running_parameter="default", rp_values=None, rel
     ep = ExpectationValue(data=data)
 
     black_expectation_value_list = ["Config"]
+    # expectation_value_measures = [
+    #     exp_value for exp_value in np.union1d(measures, post_measures) if exp_value not in black_expectation_value_list and exp_value in ep.data.columns]
     expectation_value_measures = [
-        exp_value for exp_value in measures if exp_value not in black_expectation_value_list and exp_value in ep.data.columns]
+        exp_value for exp_value in np.union1d(measures, post_measures) if exp_value not in black_expectation_value_list]
+
 
     ep.compute_expectation_value(columns=expectation_value_measures,
                                  exp_values=['mean'])  # , 'max', 'min' , 'secondMoment', 'fourthMoment'
@@ -157,7 +160,7 @@ def expectation_value(measures, running_parameter="default", rp_values=None, rel
 
     expectation_values = ep.drop_multiindex_levels_with_unique_entries(data=expectation_values)
     errors = ep.drop_multiindex_levels_with_unique_entries(data=errors)
-    results = pd.concat([expectation_values, errors], keys=["Estimate", "Std"], axis=1)
+    results = pd.concat([expectation_values, errors], keys=["Estimate", "Std"], names=["val"], axis=1)
     results = results.sort_index(axis=1, level=1, sort_remaining=False)
 
     if rel_results_dir is not None:
@@ -184,6 +187,7 @@ def expectation_value(measures, running_parameter="default", rp_values=None, rel
             results_path = get_rel_path(rel_dir=rel_results_dir, sim_base_dir=sim_base_dir)
 
             json_results = json_results.applymap(str)
+            print("Generating expectation_value_results.json file in", os.path.abspath(results_path))
             json_results.to_json(results_path + "/expectation_value_results.json", indent=4)
 
     else:
@@ -209,20 +213,18 @@ def load_expectation_value_results(rel_results_dir, sim_base_dir=None):
 
         column_levels = []
         for item_idx in results.index.values:
-            if "level" in item_idx:
+            if item_idx in ["val", "quantity", "elem", "component"]:
                 column_levels.append(item_idx)
             else:
                 break
         results = results.transpose()
         results = results.set_index(column_levels)
-        results.index.names = ["Quantity", "Observable", "Element"][:len(column_levels)]
         results = results.transpose()
         # Convert strings in dataframe to numbers
         results = results.applymap(to_float)
         return results
     else:
         # No results found
-        print("Generating expectation_value_results.json file in", os.path.abspath(results_path))
         return None
 
 

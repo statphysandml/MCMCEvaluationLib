@@ -4,9 +4,8 @@ import pandas as pd
 from mcmctools.mcmc.evaluation_module import EvaluationModule
 
 
-class Model:
-    def __init__(self, measures):
-        self.measure_names = measures
+class MCMCModelSignature:
+    def __init__(self, **kwargs):
         pass
 
     def initialize(self, starting_mode):
@@ -24,6 +23,28 @@ class Model:
         pass
 
     def measure(self):
+        pass
+
+    def size(self):
+        # Optional
+        pass
+
+    def __getitem__(self, i):
+        # Optional
+        pass
+
+    def __setitem__(self, i, val):
+        # Optional
+        pass
+
+    @property
+    def system_repr(self):
+        # Optional
+        pass
+
+    @system_repr.setter
+    def system_repr(self, system):
+        # Optional
         pass
 
 
