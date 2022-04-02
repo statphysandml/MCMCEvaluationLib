@@ -21,7 +21,7 @@ def plot_equilibrium_time(mean_observables, equilibrium_time, label, filename=No
 
 
 def equilibrium_time(sample_size, number_of_steps, measure, confidence_range=0.1,
-                     confidence_window=100, running_parameter="default", rp_values=None,
+                     confidence_window=100, running_parameter=None, rp_values=None,
                      rel_data_dir=None, data=None, rel_results_dir=None,
                      sim_base_dir=None, fma=None, custom_load_data_func=None, custom_load_data_args=None):
     print("Computing equilibrium times...")
@@ -33,7 +33,7 @@ def equilibrium_time(sample_size, number_of_steps, measure, confidence_range=0.1
             rp_values=rp_values, sim_base_dir=sim_base_dir,
             custom_load_data_func=custom_load_data_func, custom_load_data_args=custom_load_data_args)
 
-    if running_parameter.capitalize() in data.columns:
+    if running_parameter is not None and running_parameter.capitalize() in data.columns:
         del data[running_parameter.capitalize()]
 
     from mcmctools.utils.utils import get_rel_path
@@ -54,7 +54,7 @@ def equilibrium_time(sample_size, number_of_steps, measure, confidence_range=0.1
         else:
             equilibrium_times[idx] = equilibrium_time[0]
 
-        if running_parameter != "default":
+        if running_parameter is not None:
             plot_equilibrium_time(
                 mean_observables=mean_observables[:n_cmv], equilibrium_time=equilibrium_times[idx], label=measure,
                 fma=fma, filename="equilibrium_time_" + running_parameter + "=" + running_parameter_value,

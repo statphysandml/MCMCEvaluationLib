@@ -15,9 +15,14 @@ def get_correlation_time(data, tau, running_parameter):
     # c = data.iloc[:n_samples].reset_index(drop=True)
     # return c.multiply(c_tau).mean() - c.mean() * c_tau.mean()
 
-    c_tau = data.groupby(running_parameter).apply(lambda x: x.iloc[tau:].reset_index(drop=True))
-    c = data.groupby(running_parameter).apply(lambda x: x.iloc[:len(x) - tau].reset_index(drop=True))
-    return c.multiply(c_tau).groupby(running_parameter).mean() - c.groupby(running_parameter).mean() * c_tau.groupby(running_parameter).mean()
+    if running_parameter is None:
+        c_tau = data.iloc[tau:].reset_index(drop=True)
+        c = data.iloc[:len(data) - tau].reset_index(drop=True)
+        return c.multiply(c_tau).mean() - c.mean() * c_tau.mean()
+    else:
+        c_tau = data.groupby(running_parameter).apply(lambda x: x.iloc[tau:].reset_index(drop=True))
+        c = data.groupby(running_parameter).apply(lambda x: x.iloc[:len(x) - tau].reset_index(drop=True))
+        return c.multiply(c_tau).groupby(running_parameter).mean() - c.groupby(running_parameter).mean() * c_tau.groupby(running_parameter).mean()
 
 
 def determine_correlation_time(x, maximum_correlation_time):
@@ -38,7 +43,7 @@ def plot_correlation_time(corr_times, label, maximum_correlation_time, filename=
     ax.legend(loc="upper right")
 
 
-def correlation_time(minimum_sample_size, maximum_correlation_time, measure, running_parameter="default", rp_values=None,
+def correlation_time(minimum_sample_size, maximum_correlation_time, measure, running_parameter=None, rp_values=None,
                      rel_data_dir=None, data=None, rel_results_dir=None, sim_base_dir=None, fma=None,
                      custom_load_data_func=None, custom_load_data_args=None):
     print("Computing correlation times...")
@@ -50,7 +55,7 @@ def correlation_time(minimum_sample_size, maximum_correlation_time, measure, run
             rp_values=rp_values, sim_base_dir=sim_base_dir, custom_load_data_func=custom_load_data_func,
             custom_load_data_args=custom_load_data_args)
 
-    if running_parameter.capitalize() in data.columns:
+    if running_parameter is not None and running_parameter.capitalize() in data.columns:
         del data[running_parameter.capitalize()]
 
     from mcmctools.utils.utils import get_rel_path
@@ -68,7 +73,7 @@ def correlation_time(minimum_sample_size, maximum_correlation_time, measure, run
     taus = pd.DataFrame(data=taus + 1, columns=["CorrelationTime"])
     taus.index = taus.index.set_names(None)  # To be in concordance with loaded correlation times
 
-    if running_parameter != "default":
+    if running_parameter is not None:
         for label, corr_times in correlation_times.items():
             plot_correlation_time(
                 corr_times, running_parameter + " = " + label, maximum_correlation_time, fma=fma,

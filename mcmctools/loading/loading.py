@@ -39,7 +39,7 @@ class ConfigurationLoader(MHBC):
         self.chunk_iterator = 0
         self.skiprows = 0
 
-        # Enables to continue read the file from a given chunk iterator val -> not sure what it does , so far
+        # Enables to continue reading the file from a given chunk iterator val -> not sure what it actually does, so far
         current_chunk_iterator_val = kwargs.pop("current_chunk_iterator_val", None)
         if current_chunk_iterator_val is not None:
             self.skiprows = range(1, current_chunk_iterator_val * self.chunksize + 1)
@@ -152,6 +152,14 @@ class ConfigurationLoader(MHBC):
             # Ensure that for rp_values only the data files part of rp_values are loaded
             if rp_values is not None and running_parameter_val != "default" and running_parameter_val not in rp_values:
                 continue
+            # Prevent loading simulation data with "default" running parameter when simulation data with rp_values is
+            # supposed to be loaded
+            elif running_parameter != "default" and running_parameter_val == "default":
+                continue
+            # Prevent loading simulation data with rp_values when simulation data with "default"
+            # running parameter is supposed to be loaded
+            elif running_parameter == "default" and "=" in file:
+                continue
 
             if skipcols is not None:
                 with open(file) as f:
@@ -182,6 +190,14 @@ class ConfigurationLoader(MHBC):
                 file=file, running_parameter=running_parameter)
             # Ensure that for rp_values only the data files part of rp_values are loaded
             if rp_values is not None and running_parameter_val != "default" and running_parameter_val not in rp_values:
+                continue
+            # Prevent loading simulation data with "default" running parameter when simulation data with rp_values is
+            # supposed to be loaded
+            elif running_parameter != "default" and running_parameter_val == "default":
+                continue
+            # Prevent loading simulation data with rp_values when simulation data with "default"
+            # running parameter is supposed to be loaded
+            elif running_parameter == "default" and "=" in file:
                 continue
 
             if skipcols is not None:
@@ -235,15 +251,14 @@ class ConfigurationLoader(MHBC):
 
         return data
 
-
     @staticmethod
     def retrieve_running_parameter_val_from_file(file, running_parameter):
         #  Multiple data files are loaded based on running parameter
-        if running_parameter != "default":
+        if running_parameter != "default" and running_parameter in file:
             return float(file[file.find("=") + 1:file.find(".dat")])
         # Load single data file -> only a single file is loaded
         else:
-            return running_parameter
+            return "default"
 
     @staticmethod
     def prepare_single_data_frame(dat, file, running_parameter):
@@ -390,10 +405,15 @@ def load_data(rel_data_dir, running_parameter, identifier, skipcols=None, comple
     else:
         data_path = sim_base_dir + "/" + rel_data_dir
 
+    if running_parameter is None:
+        running_parameter_ = "default"
+    else:
+        running_parameter_ = running_parameter
+
     data, filenames = ConfigurationLoader.load_all_configurations(
         path=data_path,
         identifier=identifier,
-        running_parameter=running_parameter,
+        running_parameter=running_parameter_,
         skipcols=skipcols,
         complex_number_format=complex_number_format,
         rp_values=rp_values

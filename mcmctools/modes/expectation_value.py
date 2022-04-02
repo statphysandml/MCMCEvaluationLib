@@ -103,7 +103,7 @@ def compute_measures_over_config(data, measures, custom_measures_func=None, cust
 
 
 """ One of rel_data_dir and data needs to be defined. """
-def expectation_value(measures, running_parameter="default", rp_values=None, rel_data_dir=None, data=None,
+def expectation_value(measures, running_parameter=None, rp_values=None, rel_data_dir=None, data=None,
                       number_of_measurements=None, error_type="statistical", n_means_bootstrap=None, rel_results_dir=None, sim_base_dir=None,
                       custom_measures_func=None, custom_measures_args=None, custom_load_data_func=None, custom_load_data_args=None):
     print("Computing expectation values...")
@@ -134,7 +134,7 @@ def expectation_value(measures, running_parameter="default", rp_values=None, rel
     # expectation_value_measures = [
     #     exp_value for exp_value in np.union1d(measures, post_measures) if exp_value not in black_expectation_value_list and exp_value in ep.data.columns]
     expectation_value_measures = [
-        exp_value for exp_value in np.union1d(measures, post_measures) if exp_value not in black_expectation_value_list]
+        exp_value for exp_value in ep.data.columns.unique(0).values if exp_value not in black_expectation_value_list]
 
 
     ep.compute_expectation_value(columns=expectation_value_measures,
