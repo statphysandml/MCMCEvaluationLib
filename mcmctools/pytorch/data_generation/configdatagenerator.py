@@ -4,8 +4,6 @@ import numpy as np
 from pystatplottools.pytorch_data_generation.data_generation.datageneratorbaseclass import DataGeneratorBaseClass
 from mcmctools.loading.loading import ConfigurationLoader
 
-# Note that the class currently works only if the number of fixed parameters equals for all types of the same function
-
 
 class ConfigDataGenerator(ConfigurationLoader, DataGeneratorBaseClass):
 

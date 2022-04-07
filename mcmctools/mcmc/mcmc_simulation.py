@@ -3,7 +3,7 @@ import pandas as pd
 
 class MCMCModelSignature:
     def __init__(self, **kwargs):
-        self.__measures = None
+        self._measures = None
         pass
 
     def initialize(self, starting_mode):
@@ -11,11 +11,11 @@ class MCMCModelSignature:
 
     @property
     def measure_names(self):
-        return self.__measures
+        return self._measures
 
     @measure_names.setter
     def measure_names(self, measures):
-        self.__measures = measures
+        self._measures = measures
 
     def update(self, n_step):
         pass
@@ -117,7 +117,7 @@ class MCMCSimulation:
                 self.model.measure_names = [measure]
                 self.update(n_steps=start_measuring)
                 self.measure()
-                for n in range(maximum_correlation_time - 1):
+                for n in range(minimum_sample_size + maximum_correlation_time - 1):
                     self.update(n_steps=1)
                     self.measure()
 

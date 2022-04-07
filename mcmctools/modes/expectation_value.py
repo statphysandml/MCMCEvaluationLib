@@ -160,7 +160,7 @@ def expectation_value(measures, running_parameter=None, rp_values=None, rel_data
 
     expectation_values = ep.drop_multiindex_levels_with_unique_entries(data=expectation_values)
     errors = ep.drop_multiindex_levels_with_unique_entries(data=errors)
-    results = pd.concat([expectation_values, errors], keys=["Estimate", "Std"], names=["val"], axis=1)
+    results = pd.concat([expectation_values, errors], keys=["Estimate", "Error"], names=["val"], axis=1)
     results = results.sort_index(axis=1, level=1, sort_remaining=False)
 
     if rel_results_dir is not None:

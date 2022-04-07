@@ -22,8 +22,9 @@ class BatchGraphDataGenerator(BatchConfigDataGenerator):
 
     def sample_target_param(self):
         config, target = super().sample_target_param()
-        config = torch.tensor(config, dtype=torch.float32, device=self.device).view(len(config), self.config_size, -1)
-        config = Batch.from_data_list([Data(x=conf, edge_index=self.edge_indices, y=torch.tensor([tar], dtype=torch.float32, device=self.device)) for (conf, tar) in zip(config, target)])
+        config = torch.tensor(np.array(config), dtype=torch.float32, device=self.device).view(len(config), self.config_size, -1)
+        config = Batch.from_data_list([Data(
+            x=conf, edge_index=self.edge_indices, y=torch.tensor(np.array([tar]), dtype=torch.float32, device=self.device)) for (conf, tar) in zip(config, target)])
         return config
 
     def generate_edge_indices(self, edge_type):

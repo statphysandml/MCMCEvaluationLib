@@ -1,11 +1,14 @@
 from pystatplottools.pdf_env.loading_figure_mode import loading_figure_mode
+fma, plt = loading_figure_mode(develop=True)
 
-fma, plt = loading_figure_mode(develop=False)
-
-from mcmc.mcmc_simulation import MCMCSimulation
-from mcmctools.utils.lattice import get_neighbour_index
 
 import numpy as np
+
+
+""" Example implementation for using the MCMCSimulation class with the Ising model defined in Python.
+
+Providing the necessary methods, every kind of MCMC system can be simulated and evaluated by the methods and
+modules of the MCMCEvaluationLib """
 
 
 class IsingModel:
@@ -15,7 +18,7 @@ class IsingModel:
         self.J = J
         self.h = h
         self.dimensions = dimensions
-        self.measures = measures
+        self._measures = measures
 
         self.n_sites = np.product(self.dimensions)
 
@@ -32,23 +35,24 @@ class IsingModel:
 
     @property
     def measure_names(self):
-        return self.measures
+        return self._measures
 
     @measure_names.setter
     def measure_names(self, measures):
-        self.measures = measures
+        self._measures = measures
 
     def update(self, n_step):
         random_sites = np.random.randint(0, self.n_sites, n_step)
         rand = np.random.rand(n_step)
-        for step in range(n_step):
-            if rand[step] < np.exp(-self.beta * (self.J * np.sum(self.lattice[self.neighbour_indices[random_sites]], axis=1) + self.h)):
-                self.lattice[random_sites] *= -1
+        for step, rnd_site in enumerate(random_sites):
+            if rand[step] < np.exp(-2.0 * self.beta * self.lattice[rnd_site] *
+                                   (self.J * np.sum(self.lattice[self.neighbour_indices[rnd_site]]) + self.h)):
+                self.lattice[rnd_site] *= -1
 
     # def measure(self):
     #     # Can be used for measurement_to_file in mcmc_simulation.py
     #     measures = ""
-    #     for measure in self.measures:
+    #     for measure in self.measure_names:
     #         if measure == "Mean":
     #             measures += f'{self.lattice.mean():.6f}' + "\t"
     #     return measures[:-1]
@@ -56,17 +60,25 @@ class IsingModel:
     def measure(self):
         measures = []
 
-        for measure in self.measures:
+        for measure in self.measure_names:
             if measure == "Mean":
                 measures.append(self.lattice.mean())
+            elif measure == "AbsMean":
+                measures.append(np.abs(self.lattice.mean()))
+            elif measure == "Config":
+                config = ""
+                for site in self.lattice:
+                    config += f'{site:.6f}' + " "
+                measures.append(config[:-1])
             else:
                 assert False, "Unkown measure" + measure
         return measures
 
     def _precompute_neighbour_indices(self):
+        from mcmctools.utils.lattice import get_neighbour_index
         dim_mul = np.cumprod([1] + list(self.dimensions))
 
-        self.neighbour_indices = np.zeros((self.n_sites, 2 * len(self.dimensions)), np.int)
+        self.neighbour_indices = np.zeros((self.n_sites, 2 * len(self.dimensions)), np.int32)
         for site in range(self.n_sites):
             for dim in range(len(self.dimensions)):
                 self.neighbour_indices[site, 2 * dim] = get_neighbour_index(
@@ -78,15 +90,24 @@ class IsingModel:
 if __name__ == "__main__":
     ising_model = IsingModel(beta=0.1, J=1.0, h=0.0, dimensions=[4, 4])
 
+    running_parameter = "beta"
+    rp_values = [0.1, 0.4, 0.6]
+
+    from mcmc.mcmc_simulation import MCMCSimulation
     simulation = MCMCSimulation(model=ising_model,
-                                rel_data_path="./data/Test/",
-                                rel_results_path="./data/Test/results/",
-                                # running_parameter_kind="model_params",
-                                running_parameter="beta",
-                                rp_values=[0.1, 0.4, 0.7])
+                                running_parameter=running_parameter,
+                                rp_values=rp_values)
 
-    simulation.run_equilibrium_time_simulation(measure="Mean", sample_size=10, number_of_steps=100)
-
+    # Expectation value simulation and evaluation
+    simulation.run_expectation_value_simulation(measures=["Mean", "Config"], n_measurements=1000,
+                                                n_steps_equilibrium=100, n_steps_autocorrelation=10,
+                                                starting_mode="hot")
     data = simulation.measurements_to_dataframe()
-    simulation.compute_equilibrium_time(data=data, sample_size=10, number_of_steps=100, eval_confidence_range=0.1,
-                                        eval_confidence_window=10, measure="Mean", fma=fma)
+
+    from mcmctools.modes.expectation_value import expectation_value
+    expectation_values = expectation_value(
+        number_of_measurements=1000, measures=["Mean", "AbsMean"],
+        error_type="statistical",
+        running_parameter=running_parameter, rp_values=rp_values,
+        data=data)
+    print(expectation_values)

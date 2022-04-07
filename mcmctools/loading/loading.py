@@ -305,7 +305,7 @@ class ConfigurationLoader(MHBC):
 
             # Split everything
             data["Config"] = data["Config"].apply(
-                lambda x: np.float32(x.replace(" i", ", ").replace(", ", " ").split(" ")))
+                    lambda x: np.float32(x.replace(" i", ", ").replace(", ", " ").replace(",", ".").split(" ")))
 
             if complex_num and complex_number_format == "complex":
                 # Combine to a complex number
@@ -353,7 +353,7 @@ class ConfigurationLoader(MHBC):
                 else:
                     complex_num = False
 
-                x = np.float32(x.replace(" i", ", ").replace(", ", " ").split(" "))
+                x = np.float32(x.replace(" i", ", ").replace(", ", " ").replace(",", ".").split(" "))
                 if complex_num and complex_number_format == "complex":
                     x = x[::2] + 1.0j * x[1::2]
                 if len(x) != 1:
@@ -370,7 +370,9 @@ class ConfigurationLoader(MHBC):
                 complex_num = False
 
             # Split everything
-            data[col] = data[col].apply(lambda x: np.float32(x.replace(" i", ", ").replace(", ", " ").split(" ")))
+            data[col] = data[col].apply(
+                lambda x: np.float32(x.replace(" i", ", ").replace(", ", " ").replace(",", ".").split(" "))
+            )
 
             if complex_num and complex_number_format == "complex":
                 # Combine to a complex number
@@ -399,7 +401,7 @@ class ConfigurationLoader(MHBC):
         return data
 
 
-def load_data(rel_data_dir, running_parameter, identifier, skipcols=None, complex_number_format="complex", sim_base_dir=None, rp_values=None):
+def load_data(rel_data_dir, identifier, running_parameter, skipcols=None, complex_number_format="complex", rp_values=None, sim_base_dir=None):
     if sim_base_dir is None:
         data_path = os.getcwd() + "/" + rel_data_dir
     else:
@@ -423,11 +425,11 @@ def load_data(rel_data_dir, running_parameter, identifier, skipcols=None, comple
 
 def load_data_based_running_parameter(rel_data_dir, identifier, running_parameter="default", rp_values=None, sim_base_dir=None, custom_load_data_func=None, custom_load_data_args=None):
     if custom_load_data_func is None:
-        data, _ = load_data(rel_data_dir=rel_data_dir, running_parameter=running_parameter,
-                            identifier=identifier, sim_base_dir=sim_base_dir, rp_values=rp_values)
+        data, _ = load_data(rel_data_dir=rel_data_dir, identifier=identifier, running_parameter=running_parameter,
+                            rp_values=rp_values, sim_base_dir=sim_base_dir)
     else:
         data = custom_load_data_func(
-            rel_data_dir=rel_data_dir, running_parameter=running_parameter, identifier=identifier,
-            sim_base_dir=sim_base_dir, rp_values=rp_values, custom_load_data_args=custom_load_data_args
+            rel_data_dir=rel_data_dir, identifier=identifier, running_parameter=running_parameter,
+            rp_values=rp_values, sim_base_dir=sim_base_dir, custom_load_data_args=custom_load_data_args
         )
     return data

@@ -24,12 +24,12 @@ def load_configs(files_dir, mode, sim_base_dir):
     return sim_params, execution_params, running_parameter
 
 
-def load_json_sim_params(rel_data_path, identifier, running_parameter, rp_values, sim_base_dir):
+def load_json_sim_params(rel_data_dir, identifier, running_parameter, rp_values, sim_base_dir):
     import os
     if sim_base_dir is None:
-        data_path = os.getcwd() + "/" + rel_data_path
+        data_path = os.getcwd() + "/" + rel_data_dir
     else:
-        data_path = sim_base_dir + "/" + rel_data_path
+        data_path = sim_base_dir + "/" + rel_data_dir
 
     if running_parameter is None:
         return load_json(data_path + "/" + identifier + ".json")
