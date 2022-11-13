@@ -94,7 +94,7 @@ def compute_measures_over_config(data, measures, custom_measures_func=None, cust
     for measure in measures:
         if measure not in data.columns:
             new_measures, data = compute_measure_over_config(data=data, measure_name=measure, custom_measures_func=custom_measures_func, custom_measures_args=custom_measures_args)
-            if new_measures is None: # No measure has been computed
+            if new_measures is None:  # No measure has been computed
                 continue
             if len(new_measures) > 0:
                 effective_measures.remove(measure)
@@ -112,7 +112,8 @@ def expectation_value(measures, running_parameter=None, rp_values=None, rel_data
     if data is None:
         data = load_data_based_running_parameter(
             rel_data_dir=rel_data_dir, identifier="expectation_value", running_parameter=running_parameter, rp_values=rp_values,
-            sim_base_dir=sim_base_dir, custom_load_data_func=custom_load_data_func, custom_load_data_args=custom_load_data_args)
+            sim_base_dir=sim_base_dir, custom_load_data_func=custom_load_data_func, custom_load_data_args=custom_load_data_args
+        )
 
     if number_of_measurements is not None:
         assert number_of_measurements <= len(data.loc[data.index.unique(0)[0]]), "Number of measurements cannot exceed number of actual measurements."
@@ -203,8 +204,8 @@ def load_expectation_value_results(rel_results_dir, sim_base_dir=None):
     if os.path.exists(results_path + "/expectation_value_results.json"):
         results = pd.read_json(
             results_path + "/expectation_value_results.json",
-            convert_dates=False,  # dont convert columns to dates
-            convert_axes=False  # dont convert index to dates
+            convert_dates=False,  # don't convert columns to dates
+            convert_axes=False  # don't convert index to dates
         )
 
         running_parameter = results.columns[0]
@@ -220,8 +221,12 @@ def load_expectation_value_results(rel_results_dir, sim_base_dir=None):
         results = results.transpose()
         results = results.set_index(column_levels)
         results = results.transpose()
+
         # Convert strings in dataframe to numbers
         results = results.applymap(to_float)
+        if "component" in results.columns.names or "elem" in results.columns.names:
+            results.columns = pd.MultiIndex.from_tuples([tuple(map(lambda x: int(x) if x.isnumeric() else x, index)) for index in results.columns.to_list()], names=results.columns.names)
+
         return results
     else:
         # No results found

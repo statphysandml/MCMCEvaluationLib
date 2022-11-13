@@ -137,7 +137,7 @@ class ConfigurationLoader(MHBC):
             transformer=self.transformer,
             transformer_path=None  # Already added to sys.path in init function
         )[0]
-    
+
     @staticmethod
     def load_configuration_readers(path, nrows, chunksize=100, skiprows=0, identifier="", skipcols=None, running_parameter="default", rp_values=None):
         readers = []
@@ -343,7 +343,7 @@ class ConfigurationLoader(MHBC):
         else:
             # Determine data column index in dependence of entry types
             for col in data.columns:
-                if data[col].dtype != object or col == "Config" or col == "Default" or "Default" in col:
+                if data[col].dtype != object or col == "Config" or col == "Default":  # or "Default" in col:
                     continue
 
                 # Determine number of components
@@ -361,7 +361,7 @@ class ConfigurationLoader(MHBC):
                                                              names=["quantity", "component"])
 
         for col in data.columns:
-            if data[col].dtype != object or col == "Config" or col == "Default" or "Default" in col:
+            if data[col].dtype != object or col == "Config" or col == "Default":  # or "Default" in col:
                 continue
 
             if data[col].iloc[0].find(" i") != -1:
@@ -382,6 +382,7 @@ class ConfigurationLoader(MHBC):
             if len(data[col].iloc[0]) == 1:
                 # Single-index data frame
                 data[col] = data[col].apply(lambda x: x[0])
+                data.columns.name = "quantity"
             else:
                 if data.columns.nlevels == 2:
                     # Multi-index data frame with components
@@ -397,6 +398,9 @@ class ConfigurationLoader(MHBC):
                                                columns=column_index)
                 data = data.drop(col, axis=1)
                 data = pd.concat([data, col_multi_index], axis=1)
+
+        if data.columns.nlevels == 1:
+            data.columns.name = "quantity"
 
         return data
 
