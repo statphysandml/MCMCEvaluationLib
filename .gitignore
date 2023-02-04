@@ -1,6 +1,7 @@
 .idea/*
 __pychache__/
 dist/
+build/
 mcmctools.egg-info/
 MANIFEST
 *.pyc

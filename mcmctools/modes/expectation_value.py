@@ -229,6 +229,7 @@ def load_expectation_value_results(rel_results_dir, sim_base_dir=None):
 
         return results
     else:
+        print("No results found in", results_path + "/expectation_value_results.json", "- A potential source for errors is wrong representation due floating point precision. It might help to define all values related to rp_values by float('{:.6f}'.format(np.sqrt(mu))).")
         # No results found
         return None
 
